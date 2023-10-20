@@ -1,40 +1,35 @@
+#terraform 
 terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.16"
+  required_providers { #requiere de un proveedor
+    aws = { #Elegimos el de AWS
+      source  = "hashicorp/aws" # ¿De donde obtenemos el proveedor? Lo obtenemos de la pagina oficial de hashicorp
+      version = "~> 4.16" # ¿Con que version vamos a trabajar? Con la version 4.16 o superior.
     }
   }
 
-  required_version = ">= 1.2.0"
+  required_version = ">= 1.2.0" #esta es la version de terraform que tiene que ser mayor o igual a 1.2.0
 }
 
-provider "aws" {
-  region = "us-east-1"
+#provider
+provider "aws" { 
+  region = "us-east-1" #N. Virginia
 }
 
-# resource "aws_instance" "web" {
-#   ami           = "ami-0261755bbcb8c4a84"
-#   instance_type = "t2.micro"
+#Modulo de instancia EC2
+module "ec2_instances" { 
+  source  = "terraform-aws-modules/ec2-instance/aws" #¿De donde obtenemos el modulo? De terraform registry
+  version = "4.3.0" #version del modulo.
 
-#   tags = {
-#     Name = var.instance_name
-#   }
-# }
-module "ec2_instances" {
-  source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "4.3.0"
+  count = 2 #cantidad de instancias a crear
+  name  = "Instancia-${count.index}" #el nombre que les asignamos a cada una
 
-  count = 2
-  name  = "my-ec2-cluster-${count.index}"
+  ami                    = "ami-0261755bbcb8c4a84" #imagen de ubuntu focal 
+  instance_type          = "t2.micro" #free tier
+  vpc_security_group_ids = [module.vpc.default_security_group_id] #modulo de vpc, el security group id por defecto
+  subnet_id              = module.vpc.public_subnets[0] #el subnet id 
 
-  ami                    = "ami-0261755bbcb8c4a84"
-  instance_type          = "t2.micro"
-  vpc_security_group_ids = [module.vpc.default_security_group_id]
-  subnet_id              = module.vpc.public_subnets[0]
-
-  tags = {
-    Terraform   = "true"
-    Environment = "dev"
+  tags = { #algunos tags
+    Terraform   = "true" 
+    Environment = "dev" 
   }
 }
